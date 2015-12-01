@@ -39,7 +39,7 @@ module Histograms
         return 0
       end
 
-      sum = bins.inject(0) { |sum, bin| sum + (bin.value * bin.count) }
+      sum = bins.inject(0) { |s, bin| s + (bin.value * bin.count) }
       return sum.to_f / total.to_f
     end
 
@@ -77,7 +77,8 @@ module Histograms
       minDelta = Float::MAX
       minDeltaIndex = 0
 
-      bins.each_with_index do |bin, index|
+      # Which two bins should we merge?
+      bins.each_with_index do |_, index|
         next if index == 0
 
         delta = bins[index].value - bins[index - 1].value
@@ -87,6 +88,7 @@ module Histograms
         end
       end
 
+      # Create the merged bin with summed count, and weighted value
       mergedCount = bins[minDeltaIndex - 1].count + bins[minDeltaIndex].count
       mergedValue = (
         bins[minDeltaIndex - 1].value * bins[minDeltaIndex - 1].count +
@@ -94,6 +96,8 @@ module Histograms
         ) / mergedCount
 
       mergedBin = Bin.new(mergedValue, mergedCount)
+
+      # Remove the two bins we just merged together, then add the merged one
       bins.slice!(minDeltaIndex - 1, 2)
       bins.insert(minDeltaIndex - 1, mergedBin)
     end
